@@ -4,8 +4,7 @@ from tkinter.filedialog import askdirectory, askopenfilename
 import os
 import time
 
-def close_file(part_name):
-    inventor = wc.Dispatch("Inventor.Application")
+def close_file(part_name, inventor):
     part_name = part_name.split('.')[0]
     for doc in inventor.Documents:
         part_name_doc = doc.FullFileName.split('\\')[-1].split('.')[0]  # Get the part name without extension
@@ -16,18 +15,16 @@ def close_file(part_name):
             return
     print(f"Part {part_name} is not currently open.")
 
-def open_folder():
-    inventor = wc.Dispatch("Inventor.Application")
-
+def open_folder(inventor):
     folder = askdirectory(initialdir=os.path.expanduser("~\\Desktop\\Inventor Projects"))
-
+    print(folder)
     for ipt in os.listdir(folder):
         to_open = folder + '/' + ipt
+        print(to_open)
         inventor.Documents.open(to_open, True)
         print(f"Opened {to_open}.")
     
-def open_file():
-    inventor = wc.Dispatch("Inventor.Application")
+def open_file(inventor):
     file_path = askopenfilename(initialdir=os.path.expanduser("~\\Desktop\\Inventor Projects"))
     if file_path:
         inventor.Documents.Open(file_path, True)
@@ -35,13 +32,11 @@ def open_file():
     else:
         print("No file selected.")
 
-def close_files():
-    inventor = wc.Dispatch("Inventor.Application")
+def close_files(inventor):
     inventor.Documents.CloseAll(False)
     print("Closed all documents.")
 
-def get_open_files():
-    inventor = wc.Dispatch("Inventor.Application")
+def get_open_files(inventor):
     open_files = []
     thumbnails = []
     
@@ -64,8 +59,7 @@ def get_open_files():
         thumbnails.append(thumbnail_path)
     return open_files, thumbnails
 
-def get_num_files_open():
-    inventor = wc.Dispatch("Inventor.Application")
+def get_num_files_open(inventor=wc.Dispatch("Inventor.Application")):
     return len(inventor.Documents.VisibleDocuments)
 
 inventor = wc.Dispatch("Inventor.Application")

@@ -10,6 +10,7 @@ class App():
         self.num_parts = get_num_files_open()
         self.part_cards = []
         self.part_cards_container = PanedWindow(self.app, orient='vertical', bg='lightblue')
+        self.inventor = wc.Dispatch("Inventor.Application")
 
     def main_loop(self):
         current_num_parts = get_num_files_open()
@@ -48,9 +49,9 @@ class App():
         self.app.geometry("960x1080")
 
         file_menu = self.add_menu(self.app, "File")
-        file_menu.add_command(label="Open File", command=open_file)
-        file_menu.add_command(label="Open Folder", command=open_folder)
-        file_menu.add_command(label="Close Files", command=close_files)
+        file_menu.add_command(label="Open File", command=partial(open_file, inventor=self.inventor))
+        file_menu.add_command(label="Open Folder", command=partial(open_folder, inventor=self.inventor))
+        file_menu.add_command(label="Close Files", command=partial(close_files, inventor=self.inventor))
         file_menu.add_command(label="Exit", command=self.app.quit)
         self.setup_part_cards()
         self.part_cards_container.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
@@ -63,7 +64,7 @@ class App():
         return file_menu
 
     def setup_part_cards(self):
-        parts, thumbnails = get_open_files()
+        parts, thumbnails = get_open_files(self.inventor)
         i = 0 
         j = 0
 
@@ -71,38 +72,42 @@ class App():
             part_name = part.split('\\')[-1]  # Get the file name only
             part_name = part_name.split('.')[0]  # Remove the file extension
 
-            pw1 = PanedWindow(orient='vertical', bg='lightblue')
-            pw2 = PanedWindow(pw1, orient='horizontal', bg='lightblue')
-            pw2_1 = PanedWindow(pw2, orient='vertical', bg='lightblue')
+            main_part_card_window = PanedWindow(self.part_cards_container, orient='vertical', bg='lightblue')
+            part_card_name_window = PanedWindow(main_part_card_window, orient='horizontal', bg='lightblue')
+            part_card_image_window = PanedWindow(main_part_card_window, orient='horizontal', bg='lightblue')
+            part_card_button_window = PanedWindow(part_card_image_window, orient='vertical', bg='lightblue')
 
-            msg = Message(self.app, text=f"{part_name}", width=500)
+            msg = Message(part_card_name_window, text=f"{part_name}", width=500)
+            part_card_name_window.add(msg)
 
             img = Image.open(thumbnail)
             tk_img = ImageTk.PhotoImage(img)
-            img_label = Label(pw2, image=tk_img, anchor='w')
+            img_label = Label(part_card_image_window, image=tk_img, anchor='w')
             img_label.image = tk_img  # Keep a reference to avoid garbage collection
-            btn = Button(pw2_1, text="Close Part", command=partial(close_file, part_name))
+            btn = Button(part_card_button_window, text="Close Part", command=partial(close_file, part_name))
             btn.config(width=10, height=2, bg='red', fg='white', font=('Arial', 12, 'bold'))
+            btn.bind("<Enter>", lambda e: e.widget.config(bg='gray'))  # Change color on hover
+            btn.bind("<Leave>", lambda e: e.widget.config(bg='red'))  # Change color on hover
 
-            pw2_1.add(btn)
+            part_card_button_window.add(btn)
 
-            pw2.add(img_label)
-            pw2.add(pw2_1)
+            part_card_image_window.add(img_label)
+            part_card_image_window.add(part_card_button_window)
             
-            pw1.add(msg)
-            pw1.add(pw2)
+            main_part_card_window.add(part_card_name_window)
+            main_part_card_window.add(part_card_image_window)
 
             row = j
             col = i
-            self.part_cards_container.add(pw1)
+            self.part_cards_container.add(main_part_card_window)
 
-            pw1.grid(row=row, column=col, padx=10, pady=10)
+            main_part_card_window.grid(row=row, column=col, padx=10, pady=10)
 
-            if i == 2:
+            if i == 1:
                 i = 0
                 j += 1
             else:
                 i += 1
-            self.part_cards.append(pw1)
+            self.part_cards.append(main_part_card_window)
         
 App().run()
