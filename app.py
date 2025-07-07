@@ -1,4 +1,3 @@
-from tkinter import Tk
 from tkinter import *
 from parts import *
 from PIL import Image, ImageTk
@@ -11,6 +10,7 @@ class App():
         self.part_cards = []
         self.part_cards_container = PanedWindow(self.app, orient='vertical', bg='lightblue')
         self.inventor = wc.Dispatch("Inventor.Application")
+        self.inventor.Visible = True  # Ensure Inventor is visible
 
     def main_loop(self):
         current_num_parts = get_num_files_open()
@@ -84,16 +84,15 @@ class App():
             tk_img = ImageTk.PhotoImage(img)
             img_label = Label(part_card_image_window, image=tk_img, anchor='w')
             img_label.image = tk_img  # Keep a reference to avoid garbage collection
-            btn = Button(part_card_button_window, text="Close Part", command=partial(close_file, part_name))
-            btn.config(width=10, height=2, bg='red', fg='white', font=('Arial', 12, 'bold'))
-            btn.bind("<Enter>", lambda e: e.widget.config(bg='gray'))  # Change color on hover
-            btn.bind("<Leave>", lambda e: e.widget.config(bg='red'))  # Change color on hover
-
-            part_card_button_window.add(btn)
-
             part_card_image_window.add(img_label)
+
+            close_part_button = self.create_button("Close Part", 'red', close_file, part_name, self.inventor)
+            part_card_button_window.add(close_part_button)
+
+            save_as_stl_button = self.create_button("Save as STL", 'blue', save_file_as_stl, part_name, self.inventor)
+            part_card_button_window.add(save_as_stl_button)
+
             part_card_image_window.add(part_card_button_window)
-            
             main_part_card_window.add(part_card_name_window)
             main_part_card_window.add(part_card_image_window)
 
@@ -109,5 +108,12 @@ class App():
             else:
                 i += 1
             self.part_cards.append(main_part_card_window)
-        
+    
+    def create_button(self, text, color, command, *args):
+        btn = Button(self.app, text=text, command=partial(command, *args))
+        btn.config(width=12, height=1, bg=color, fg='white', font=('Terminal', 10, 'bold'))
+        btn.bind("<Enter>", lambda e: e.widget.config(bg='gray'))
+        btn.bind("<Leave>", lambda e: e.widget.config(bg=color))
+        return btn
+    
 App().run()

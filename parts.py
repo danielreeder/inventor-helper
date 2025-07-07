@@ -62,5 +62,19 @@ def get_open_files(inventor):
 def get_num_files_open(inventor=wc.Dispatch("Inventor.Application")):
     return len(inventor.Documents.VisibleDocuments)
 
-inventor = wc.Dispatch("Inventor.Application")
-print(inventor.Documents.VisibleDocuments.count)
+def save_file_as_stl(file_name, inventor):
+    Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+    folder = ''
+    if os.path.exists("folder.txt"):
+        with open("folder.txt", 'r') as f:
+            folder = f.readline().strip()
+    else:
+        folder = askdirectory(initialdir=os.path.expanduser("~\\Desktop")) # show an "Open" dialog box and return the path to the selected file
+        with open("folder.txt", 'w') as f:
+            f.write(folder)
+
+    output = folder + "/" + file_name + ".stl"
+    inventor.ActiveDocument.SaveAs(output, 15100)
+
+    print(f"Document saved as {file_name}.stl to {folder}.")
+    time.sleep(1)
